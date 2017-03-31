@@ -1,0 +1,1 @@
+cmd_/home/houzi/code/blk/blk.ko.unsigned := ld -r -m elf_x86_64 -T /usr/src/kernels/2.6.32-573.el6.x86_64/scripts/module-common.lds --build-id -o /home/houzi/code/blk/blk.ko.unsigned /home/houzi/code/blk/blk.o /home/houzi/code/blk/blk.mod.o 
