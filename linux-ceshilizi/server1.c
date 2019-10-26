@@ -21,7 +21,7 @@ int main()
 	bind(server_sockfd,(struct sockaddr *)&server_address,server_len);
 	
 	listen(server_sockfd,5);
-	whiel(1){
+	while(1){
 		char ch;
 		printf("server waiting\n");
 		client_len=sizeof(client_address);
