@@ -22,14 +22,14 @@ int main()
 {
 	float A[10];
 	int i = 0;
-	for(i; i<11; i++)
-		A[i] = rand();
+	for(i; i<10; i++)
+		A[i] = (float)((int)(rand() * 1000) / 100);
 	for(i = 0; i < 10; i++)
-		printf("%d ", A[i]);
+		printf("%f ", A[i]);
 	printf("\n");
 	sort(A);
 	for(i = 0; i < 10; i++)
-		printf("%d ", A[i]);
+		printf("%f ", A[i]);
 	printf("\n");
 	return 0;
 }
