@@ -30,4 +30,6 @@ int main()
 	strncpy(word2[i],flag2,n);
 	word2[i][n]='\0';
 	printf("%s\n",word2[i]);
+	
+	return 0;
 }
