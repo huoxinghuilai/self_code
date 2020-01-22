@@ -32,6 +32,8 @@ int main()
         strncpy(cmd2[i], flag2, n);
         strcat(cmd2[i], "\0");
 	printf("%s\n", cmd2[i]);
+	
+	return 0;
 }
 
 
