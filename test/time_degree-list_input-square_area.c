@@ -12,14 +12,14 @@ int main()
 
 	gets(s);
     
-	p=s;
+	p = s;
     
 	while(1)
 	{
 		a[0] = (*p) % 48 * 10 + *(p + 1) % 48;  //时针
 		if( a[0] > 12)                    //时针取0~12
 			a[0] = a[0] - 12;
-		a[1] = *(p + 3) % 48 * 10+ *(p + 4) % 48;//分针
+		a[1] = *(p + 3) % 48 * 10 + *(p + 4) % 48;//分针
 	
 		x = a[1] / 60 * 30;               //时针一小时内偏移角度	
 		y = a[1] / 60 * 360;              //分针偏移角度
@@ -35,7 +35,7 @@ int main()
 
     		if(*(p + 5) == '\n')
 			break;
-		p=p+6;
+		p = p + 6;
 	}
 
 	/*
@@ -46,24 +46,22 @@ int main()
 		struct time *next;
 	};
 	int i = 3;
-	struct time *head, *p;
+	struct time *head, *p1, *q;
 	head = (struct time *)malloc(sizeof(struct time));
-	p = head;
+	p1 = head;
 	while (i--)
 	{
-		struct time *q = (struct time *)malloc(sizeof(struct time));	
+		q = (struct time *)malloc(sizeof(struct time));	
 		scanf("%s", q->s);
-		if(strlen(q->s) == "")
-			break;
-		q = p->next;
-		p = q;						
+		p1->next = q;
+		p1 = q;						
 	}
 	
-	p = head->next;
-	while(p != NULL)
+	p1 = head->next;
+	while(p1 != NULL)
 	{
-		printf("%s\n", p->s);
-		p = p->next;
+		printf("%s\n", p1->s);
+		p1 = p1->next;
 	}
 	
 	/*
@@ -74,3 +72,5 @@ int main()
     	area = length * length;
     	printf("%f\n", area); 
 }
+
+
