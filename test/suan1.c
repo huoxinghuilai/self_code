@@ -27,5 +27,7 @@ main()
 	}
 	for(i = 0; i < 36; i++)
 		printf("   %s\n", s[i]);
+        
+        return 0;
 }
 
