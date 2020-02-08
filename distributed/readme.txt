@@ -14,3 +14,9 @@ set （-1） key value
 get node key (-1)
 
 上述（-1）表示该位置的数据是不需要的，但是因为数据输入格式的问题，当前需要在该位置写入（-1）。
+
+编译：
+
+gcc -g include/data_struct.h include/sock_create.h include/inode.h main.c -o server
+
+gcc -g include/data_struct.h include/sock_create.h client.c -o client
