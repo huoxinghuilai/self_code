@@ -1,101 +1,100 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-#define PAGE_SIZE 64
-#define MM_SIZE 4096
-#define ZONE_NUM 3
+#define VMM_SIZE  4096  // 假设虚拟空间占 4KB
+#define PAGE_SIZE 64    // 假设页大小为 64 字节
+#define VMM_PAGE_NUM (VMM_SIZE / PAGE_SIZE / 8)
 
-enum zone_type{
-    Low = 0;
-    Normal;
-    High;
-};
+char page_map[VMM_PAGE_NUM];
+void *mm_addr;
 
-unsigned int zone_range[] = {
-    [Low] = 512,
-    [Normal] = 2560,
-    [High] = 1024,
-};
-
-struct mm_zone {
-    unsigned int start;
-    unsigned int end;
-    unsigned int size;
-    int type;
-    
-    struct list_node list; //zone域链表节点
-    struct list_head page_list; //每组zone域中都存在一组关联的页
-};
-
-struct page {
-    unsigned int start;
-    unsigned int end;
-    unsigned int size;
+struct virt_page {
+    void *virt_addr;
     unsigned int flags;
-    struct mm_zone zone;
+    struct virt_page *next;
+    struct virt_page *prev;
 };
 
-struct list_head zone_list;
+struct virt_page page_head;
 
-unsigned int kernel_args = 128;
-
-unsigned int mm_alloc(unsigned int size, int type)
+void *vmm_alloc(unsigned int size)
 {
-    struct page p;
-    
-    while(size > 0) { // 页管理模式下，需将已占用的页进行标记，避免被使用
-        switch (type) {
-            case Low:
-                break;
-            case Normal:
-                p.zone = mm_zone[Normal];
-                p.start = mm_zone[Normal].start;
-                while (mm_check_used(p.start))
-                    p.start += PAGE_SIZE;
-                break;
-            case High:
+    int nr, i, j;
+    void *addr;
+
+    nr = (size % PAGE_SIZE) ? (size / PAGE_SIZE + 1) : (size / PAGE_SIZE);
+    printf("alloc %d page\n", nr);
+
+    for (j = 0; j < VMM_PAGE_NUM; j++) {
+        printf("page_map[%d]: %x\n", j, page_map[j]);
+
+        for (i = 0; i < 8; i++) {
+            printf("%x\n", 1 << i);
+
+            if ((page_map[j] & (1 << i)) == 0) {
+                printf("has free page is %d(index)\n", j * 8 + i);
+
+                struct virt_page page;
+
+                page.virt_addr = (j * 8 + i) * 64 + mm_addr;
+                addr = page.virt_addr;
+
+                page.next = &page_head;
+
+                page.prev = page_head.prev;
+                page_head.prev->next = &page;
+                page_head.prev = &page;
+
+                page_map[j] |= 1 << i;
+                nr--;
+            }
+
+            if (nr == 0)
                 break;
         }
-        
-        p.size = PAGE_SIZE;
-        p.end = page->start + page->size - 1;
-        p.flag = KERNEL_ARGS | KERNEL_USED;
-        
-        size = size - page->size;
-        
-        list_add(p.list_node, p.zone.page_list);
+
+        if (nr == 0)
+            break;
     }
+
+    if (nr) {
+        printf("no enough free page.\n");
+
+        return 0;
+    }
+
+    return addr;
 }
 
-int mm_init(void)
+int vmm_page_init(void)
 {
-    unsigned int addr;
-    struct mm_zone *zone;
-    unsigned int zone_size;
-    
-    addr = (char *)malloc(MM_SIZE);    // 假设该空间为物理内存空间
-    
-    zone_size = sizeof(struct mm_zone);
-    
-    for (i = 0; i < ZONE_NUM; i++) {
-        zone = (struct mm_zone *)(i * zone_size);
-        
-        zone->type = i;
-        zone->start = i * zone_size;
-        zone->size = zone_range[zone->type];
-        zone->end = zone->start + zone->size - 1;
-        
-        list_add(zone->list, zone_list);
-    }
-    
-    mm_alloc(kernel_args);
-    
+    memset(page_map, 0, sizeof(VMM_PAGE_NUM));
+
+    page_head.next = &page_head;
+    page_head.prev = &page_head;
+
+    return 0;
+}
+
+int vmm_init(void)
+{
+    vmm_page_init();
+
     return 0;
 }
 
 int main(int argc, char argv[])
 {
-    mm_init();
-    
+    void *addr;
+
+    vmm_init();
+
+    addr = vmm_alloc(234);
+    printf("addr: %x\n", addr);
+
+    addr = vmm_alloc(345);
+    printf("addr: %x\n", addr);
+
     return 0;
 }
