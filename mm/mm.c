@@ -11,40 +11,64 @@
 char page_map[VMM_PAGE_NUM];
 void *mm_addr;
 
+struct vmm;
+
 struct virt_page {
+    unsigned int index;
     void *virt_addr;
     unsigned int flags;
     struct virt_page *next;
     struct virt_page *prev;
+    struct vmm *owner;
 };
 
-static struct virt_page page_head;
+struct vmm {
+    struct virt_page page_list;
+    int page_num;
+};
+
+//static struct virt_page page_head;
 static struct virt_page page_global[VMM_PAGE];
 
 void vmm_free(void *addr)
 {
-    struct virt_page *tmp = page_head.next;
     unsigned long addr1 = (unsigned long)addr;
     int index, index1, index2;
+    struct virt_page *tmp, *page_head;
 
-    while (tmp != &page_head) {
-        printf("%x %x\n", tmp, &page_head);
+    index = addr1 / PAGE_SIZE;
+    tmp = &page_global[index];
+    page_head = &tmp->owner->page_list;
+
+    while (tmp != page_head) {
+        printf("%x \n", tmp);
         printf("%x %x\n", tmp->virt_addr, addr);
 
-        if (tmp->virt_addr == addr) {
-            index = addr1 / PAGE_SIZE;
-            index1 = index / 8;
-            index2 = index % 8;
+//      if (tmp->virt_addr == addr) {
+            index1 = tmp->index / 8;
+            index2 = tmp->index % 8;
 
             page_map[index1] &= ~(1 << index2);
-            printf("page_map[%d]: %x\n", index1, page_map[index1]);
-            break;
-        }
+            printf("page_map[%d]: %8x\n", index1, page_map[index1]);
+//          break;
+//        }
 
         tmp = tmp->next;
     }
 
-    printf("index: %d index1: %d index2: %d\n", index, index1, index2);
+//    printf("index: %d index1: %d index2: %d\n", index, index1, index2);
+
+    return;
+}
+
+void vmm_area_init(struct vmm *area)
+{
+    struct virt_page *page_head;
+
+    page_head = &area->page_list;
+
+    page_head->next = page_head;
+    page_head->prev = page_head;
 
     return;
 }
@@ -55,6 +79,10 @@ void *vmm_alloc(unsigned int size)
     void *addr;
     int first = 0;
     struct virt_page *page;
+    struct vmm vmm_area;
+    struct virt_page *page_head = &vmm_area.page_list;
+
+    vmm_area_init(&vmm_area);
 
     nr = (size % PAGE_SIZE) ? (size / PAGE_SIZE + 1) : (size / PAGE_SIZE);
     printf("alloc %d page\n", nr);
@@ -71,6 +99,8 @@ void *vmm_alloc(unsigned int size)
                 page = &page_global[j * 8 + i];
                 printf("page: %x\n", page);
 
+                page->index = j * 8 + i;
+
                 page->virt_addr = (j * 8 + i) * 64 + mm_addr;
                 printf("page->virt_addr: %x\n", page->virt_addr);
                 if (!first) {
@@ -78,10 +108,12 @@ void *vmm_alloc(unsigned int size)
                     first = 1;
                 }
 
-                page->next = &page_head;
-                page->prev = page_head.prev;
-                page_head.prev->next = page;
-                page_head.prev = page;
+                page->next = page_head;
+                page->prev = page_head->prev;
+                page_head->prev->next = page;
+                page_head->prev = page;
+
+                page->owner = &vmm_area;
 
                 page_map[j] |= 1 << i;
                 nr--;
@@ -108,8 +140,8 @@ int vmm_page_init(void)
 {
     memset(page_map, 0, sizeof(VMM_PAGE_NUM));
 
-    page_head.next = &page_head;
-    page_head.prev = &page_head;
+//    page_head.next = &page_head;
+//    page_head.prev = &page_head;
 
     return 0;
 }
