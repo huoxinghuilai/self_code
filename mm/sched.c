@@ -17,17 +17,17 @@ struct task *ready_queue[6];
 struct task *wait_queue[6];
 struct task *head;
 
-struct task *create_ready_queue() {
+struct task *create_ready_queue(void) {
 	int i;
 
 	for (i = 0; i < 6; i++) { 
 		ready_queue[i] = (struct task *)malloc(sizeof(struct task));
-		ready_queue[i]->next = ready_queue[i];
-		ready_queue[i]->prev = ready_queue[i];
+		ready_queue[i]->next=ready_queue[i];
+		ready_queue[i]->prev=ready_queue[i];
 	}
 }
 
-struct task *create_wait_queue() {
+struct  task *creat_wait_queue(void) {
 	int i;
 	
 	for (i = 0; i < 6; i++) { 
@@ -83,18 +83,19 @@ struct task *del_from_queue(struct task *t[],struct task *p) {
 	return p;
 }
 
-int check_wait_to_ready() {	// 检查进程是否由阻塞态进入到就绪态，并且转移
+int check_wait_to_ready(void) {	// 检查进程是否由阻塞态进入到就绪态，并且转移
 	int i;
 	struct task *p;
 
 	for (i = 0; i < 6; i++) {	// 阻塞态按优先级来执行
 		if(wait_queue[i]->next != wait_queue[i]) {
-			p = del_from_queue(wait_queue, wait_queue[i]->next);
+			p = del_form_queue(wait_queue, wait_queue[i]->next);
 			p->flag = 0;
 			add_to_queue(ready_queue, p);
 			break;
 		}
 	}
+
 	return 0;
 }
 
@@ -105,8 +106,8 @@ int check_ready_to_wait(struct task *p) {
 	return 0;
 }
 
-// 按照优先级打印
-int print_init_task() {
+// 按照优先级打印，同时根据任务标志位添加到对应的队列中
+int print_init_task(void) {
 	struct task *p;
 
 	printf("id  prio  time  flag\n",p->id, p->pro, p->time, p->flag);
@@ -116,31 +117,32 @@ int print_init_task() {
 		printf("%2d  %4d  %4d  %4d\n",p->id, p->pro, p->time, p->flag);
 
 		head->next = p->next;
-		p->next->prev=head;
+		p->next->prev = head;
 
 		if(p->flag == 0)
 			add_to_queue(ready_queue, p);			
 		else
 			add_to_queue(wait_queue, p);
 
-		p=head->next;
+		p = head->next;
 	}
 }
 
 int queue_is_empty(struct task *t[]) {
-	int i, j = 0;
+	int i, j;
 
 	for (i = 0; i < 6; i++) {
 		if(t[i]->next == t[i])
 			j++;
 	}
+
 	if(j == 6)
 		return 0;
 	else
 		return 1;
 }
 
-int print_ready_queue() {
+int print_ready_queue(void) {
 	int i;
 	struct task *p;
 
@@ -156,7 +158,7 @@ int print_ready_queue() {
 		printf("就绪队列无进程\n");
 }
 
-int print_wait_queue() {
+int print_wait_queue(void) {
 	int i;
 	struct task *p;
 
@@ -171,21 +173,22 @@ int print_wait_queue() {
 		printf("阻塞队列无进程\n");
 }
 
-int run() {
+int run(void) {
 	int i, t;
 	struct task *p;
 
-	t = rand() % 5;
-	
-	while (queue_is_empty(ready_queue) == 0 && queue_is_empty(wait_queue) == 1)
+	if (queue_is_empty(ready_queue) == 0 && queue_is_empty(wait_queue) == 0) {
+		printf("无任务可执行\n");
+
+		return 1;
+	}
+
+	if (queue_is_empty(ready_queue) == 0 && queue_is_empty(wait_queue) == 1)
 		check_wait_to_ready();
 
-	if(t < 3)
-		check_wait_to_ready();
-
-       for (i = 0; i < 6; i++) {	// 当任务得到执行时，状态由就绪切换为运行，需要从就绪表中删除
+    	for (i = 0; i < 6; i++) {	// 当任务得到执行时，状态由就绪切换为运行，需要从就绪表中删除
 		if(ready_queue[i]->next != ready_queue[i]) {
-			p = del_from_queue(ready_queue, ready_queue[i]->next);
+			p = del_form_queue(ready_queue, ready_queue[i]->next);
 			p->flag = 2;
 			break;
 		}
@@ -193,28 +196,30 @@ int run() {
 
 	while (p->time--) {
 		printf("正在运行的进程为:\n");
-		printf("%2d  %4d  %4d  %4d\n",p->id, p->pro, p->time, p->flag);
+		printf("%2d  %4d  %4d  %4d\n", p->id, p->pro, p->time, p->flag);
 
 		sleep(1);
 
-		t = rand() % 5;
-
-		if(t >= 3) {
-			check_ready_to_wait(p);
-		    break;
-		}
-
-		
-	        if(t < 3) {
-		    printf("该进程运行完毕\n");
-		    free(p);
-		    return 0;
-                }
-
 		if (p->time == 0) {
-		    set_prio(p);
-		    check_ready_to_wait(p);	
+			set_prio(p);
+			check_ready_to_wait(p);
+
+			break;
 		}
+
+		t = rand() % 5;
+		if (t < 3) {
+			check_ready_to_wait(p);
+			break;
+		}
+
+
+		if (t >= 3) {
+			printf("该进程运行完毕\n");
+			free(p);
+			return 0;
+		}
+
 	}
 
     return 0;
@@ -228,7 +233,7 @@ int main(int argc, char *argv[]) {
 	init_task(5);
 
 	printf("初始进程:\n");
-	print_init_task();
+	printf_init_task();
 
 	printf("就绪队列:\n");
 	print_ready_queue();
@@ -238,11 +243,12 @@ int main(int argc, char *argv[]) {
 	
 	//进程开始运行
 	while (1) {
-		run();
-	//	printf("就绪队列:\n");
-	//	print_ready_queue();
-	//	printf("阻塞队列:\n");
-	//	print_wait_queue();
+		if (run())
+			break;
+		printf("就绪队列:\n");
+		print_ready_queue();
+		printf("阻塞队列:\n");
+		print_wait_queue();
 	}
 
 	return 0;
