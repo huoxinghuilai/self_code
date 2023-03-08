@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "dir.h": "c",
+        "fs_type.h": "c",
+        "inode.h": "c"
+    }
+}
